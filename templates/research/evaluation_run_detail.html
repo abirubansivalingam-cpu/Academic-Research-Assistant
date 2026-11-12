@@ -1,0 +1,104 @@
+{% extends "research/base.html" %}
+{% block title %}Retrieval comparison | Academic Research Assistant{% endblock %}
+{% block content %}
+<style>
+  .chart-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+  .metric-chart { border:1px solid var(--line); border-radius:10px; padding:16px; background:#fff; }
+  .chart-row { display:grid; grid-template-columns:76px 1fr 54px; gap:8px; align-items:center; margin:10px 0; font-size:.9rem; }
+  .bar-track { height:14px; border-radius:8px; overflow:hidden; background:#e9eff5; }
+  .bar-fill { height:100%; border-radius:8px; background:var(--blue); }
+  .bar-fill.semantic { background:#4d8f70; }
+  .bar-fill.hybrid { background:#c47b27; }
+  .relevant-hit { color:#17633c; font-weight:700; }
+  .irrelevant-hit { color:#8b3940; }
+  blockquote { margin:10px 0; padding-left:14px; border-left:3px solid var(--line); }
+</style>
+
+<section class="card">
+  <p class="muted">SAVED COMPARISON · {{ run.created_at|date:"d M Y, H:i" }}</p>
+  <h1>Retrieval method comparison</h1>
+  <p>Compared {{ run.question_count }} manually labeled question{{ run.question_count|pluralize }} at k={{ run.top_k }}.</p>
+  {% if ignored_unlabeled %}<p class="muted">{{ ignored_unlabeled }} unlabeled question{{ ignored_unlabeled|pluralize }} were skipped.</p>{% endif %}
+  <a class="button secondary" href="{% url 'evaluation_dashboard' %}">Back to evaluation</a>
+</section>
+
+<section class="card">
+  <h2>Comparison charts</h2>
+  <p class="muted">Quality scores range from 0 to 100%. The response-time bars scale to the slowest method in this run; shorter is faster.</p>
+  <div class="chart-grid">
+    <div class="metric-chart">
+      <h3>Precision@{{ run.top_k }}</h3>
+      {% for method in chart_methods %}
+        <div class="chart-row"><span>{{ method.label }}</span><div class="bar-track"><div class="bar-fill {{ method.key }}" style="width:{{ method.precision_percent }}%"></div></div><strong>{{ method.precision_at_k|floatformat:2 }}</strong></div>
+      {% endfor %}
+    </div>
+    <div class="metric-chart">
+      <h3>Recall@{{ run.top_k }}</h3>
+      {% for method in chart_methods %}
+        <div class="chart-row"><span>{{ method.label }}</span><div class="bar-track"><div class="bar-fill {{ method.key }}" style="width:{{ method.recall_percent }}%"></div></div><strong>{{ method.recall_at_k|floatformat:2 }}</strong></div>
+      {% endfor %}
+    </div>
+    <div class="metric-chart">
+      <h3>Citation accuracy@3</h3>
+      {% for method in chart_methods %}
+        <div class="chart-row"><span>{{ method.label }}</span><div class="bar-track"><div class="bar-fill {{ method.key }}" style="width:{{ method.citation_percent }}%"></div></div><strong>{{ method.citation_accuracy|floatformat:2 }}</strong></div>
+      {% endfor %}
+    </div>
+    <div class="metric-chart">
+      <h3>Mean response time</h3>
+      {% for method in chart_methods %}
+        <div class="chart-row"><span>{{ method.label }}</span><div class="bar-track"><div class="bar-fill {{ method.key }}" style="width:{{ method.latency_percent }}%"></div></div><strong>{{ method.mean_response_ms|floatformat:1 }} ms</strong></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Aggregate metrics</h2>
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;text-align:left">
+      <thead><tr><th>Method</th><th>Precision@{{ run.top_k }}</th><th>Recall@{{ run.top_k }}</th><th>Citation accuracy@3</th><th>MRR@{{ run.top_k }}</th><th>Mean time (ms)</th></tr></thead>
+      <tbody>
+        {% for method in methods %}
+          <tr><td>{{ method.label }}</td><td>{{ method.precision_at_k|floatformat:3 }}</td><td>{{ method.recall_at_k|floatformat:3 }}</td><td>{{ method.citation_accuracy|floatformat:3 }}</td><td>{{ method.mrr|floatformat:3 }}</td><td>{{ method.mean_response_ms|floatformat:2 }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Research findings</h2>
+  <ul>{% for finding in findings %}<li>{{ finding }}</li>{% endfor %}</ul>
+  <p class="muted">These are descriptive results for this labeled set, not a statistical significance test. Citation accuracy@3 is the fraction of the three answer passages that point to a manually labeled relevant page.</p>
+</section>
+
+<section class="card">
+  <h2>Per-question results</h2>
+  {% for question in questions %}
+    <details style="margin:12px 0;padding:14px;border:1px solid var(--line);border-radius:8px">
+      <summary><strong>{{ question.question }}</strong> — {{ question.relevant_page_count }} relevant page{{ question.relevant_page_count|pluralize }}</summary>
+      <div class="grid" style="margin-top:14px">
+        {% for method in question.methods %}
+          <article class="doc">
+            <h3>{{ method.label }}</h3>
+            <p class="muted">P@{{ run.top_k }} {{ method.precision_at_k|floatformat:2 }} · R@{{ run.top_k }} {{ method.recall_at_k|floatformat:2 }} · Citation@3 {{ method.citation_accuracy|floatformat:2 }} · {{ method.response_ms|floatformat:1 }} ms</p>
+            {% if method.retrieved %}
+              <ol>
+                {% for hit in method.retrieved %}
+                  <li class="{% if hit.relevant %}relevant-hit{% else %}irrelevant-hit{% endif %}">
+                    <a href="{% url 'document_detail' hit.document_id %}#page-{% if hit.page_number %}{{ hit.page_number }}{% else %}text{% endif %}">{{ hit.title }} — {{ hit.page_label }}</a>{% if hit.relevant %} · labeled relevant{% else %} · not labeled relevant{% endif %}
+                    <blockquote>{{ hit.excerpt }}</blockquote>
+                  </li>
+                {% endfor %}
+              </ol>
+            {% else %}
+              <p class="muted">No passages were retrieved.</p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </div>
+    </details>
+  {% endfor %}
+</section>
+{% endblock %}

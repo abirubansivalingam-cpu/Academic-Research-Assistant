@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Academic Research Assistant{% endblock %}</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#080d1c; --surface:#111a2e; --surface-2:#17233b;
+      --line:#263653; --ink:#e8eefb; --muted:#9aa9c2;
+      --navy:#0b1428; --blue:#7c6cff; --purple:#a78bfa;
+      --good:#34d399; --danger:#fb7185;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh;
+      background:radial-gradient(ellipse at 15% 0%,#1c2450 0,transparent 38%),
+                 radial-gradient(ellipse at 90% 10%,#271b50 0,transparent 32%),var(--bg);
+      color:var(--ink); font:15px/1.65 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    }
+    a { color:#b8adff; text-decoration:none; }
+    a:hover { color:#ddd6fe; text-decoration:underline; }
+    header {
+      position:sticky; top:0; z-index:10; backdrop-filter:blur(16px);
+      background:#0b1428eF; border-bottom:1px solid #2a3653;
+      color:white; padding:14px 5%; display:flex; align-items:center;
+      justify-content:space-between; gap:15px; flex-wrap:wrap;
+    }
+    header a { color:#dce5fb; text-decoration:none; margin-right:14px; }
+    .brand { font-weight:800; letter-spacing:.2px; font-size:1.02rem; }
+    nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .site-search { display:flex; align-items:center; gap:7px; width:min(380px,100%); }
+    .site-search input { min-width:0; margin:0; }
+    .site-search button { flex:none; padding:9px 12px; }
+    main { max-width:1160px; min-height:calc(100vh - 150px); margin:34px auto; padding:0 20px; }
+    .card {
+      background:linear-gradient(145deg,#141f36f5,#10192cf5);
+      border:1px solid var(--line); border-radius:18px; padding:25px;
+      margin-bottom:19px; box-shadow:0 18px 55px #00000030;
+    }
+    h1,h2,h3 { line-height:1.2; color:#f4f6ff; letter-spacing:-.02em; }
+    h1 { font-size:clamp(1.8rem,3vw,2.55rem); }
+    h2 { font-size:1.35rem; }
+    .muted,.helptext,.helptext ul { color:var(--muted); }
+    .button,button {
+      display:inline-block; border:1px solid transparent; border-radius:10px;
+      padding:10px 16px; background:linear-gradient(120deg,#6758ed,#8b5cf6);
+      color:white; text-decoration:none; font:inherit; font-weight:650;
+      cursor:pointer; box-shadow:0 7px 20px #7058ed30; transition:transform .15s,filter .15s;
+    }
+    .button:hover,button:hover { filter:brightness(1.12); transform:translateY(-1px); text-decoration:none; }
+    .button.secondary,button.secondary { background:#202d48; color:#dbe5f7; border-color:#344565; box-shadow:none; }
+    .danger { background:#9f334c; box-shadow:none; }
+    input,textarea,select {
+      display:block; width:100%; color:var(--ink); background:#0b1427;
+      border:1px solid #344563; border-radius:10px; padding:11px 12px;
+      margin-top:5px; font:inherit; outline:none;
+    }
+    input:focus,textarea:focus,select:focus { border-color:#9185ff; box-shadow:0 0 0 3px #8b5cf633; }
+    input[type=checkbox],input[type=radio] { width:auto; display:inline-block; accent-color:#8b5cf6; }
+    label { display:block; color:#dce5f5; font-weight:650; margin:14px 0 5px; }
+    ul.errorlist { color:#fda4af; padding-left:20px; }
+    .messages { list-style:none; padding:0; }
+    .messages li { padding:11px 14px; border-radius:10px; background:#12372f; border:1px solid #1f6b57; color:#b8f7dd; margin-bottom:8px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:15px; }
+    .doc { background:#0c162a; border:1px solid #2a3b59; border-radius:13px; padding:17px; min-width:0; }
+    .doc h3 { margin:0 0 6px; overflow-wrap:anywhere; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .search { display:flex; gap:8px; align-items:end; }
+    .search > div { flex:1; }
+    .evidence-answer { margin:16px 0 22px; padding:17px; background:#171b3a; border:1px solid #433c80; border-left:4px solid var(--purple); border-radius:12px; }
+    .evidence-answer blockquote { margin:14px 12px; color:#e2e7ff; }
+    .page-choices { list-style:none; max-height:360px; overflow:auto; margin:8px 0; padding:12px; background:#0b1427; border:1px solid var(--line); border-radius:10px; }
+    .page-choices li { margin:6px 0; }
+    .page-choices label { display:flex; gap:8px; align-items:flex-start; margin:0; font-weight:400; }
+    .page-choices input { width:auto; margin-top:5px; flex:none; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { color:#c9c2ff; background:#192440; }
+    code { color:#c4b5fd; background:#0b1427; padding:2px 5px; border-radius:5px; }
+    footer { text-align:center; color:#8291ad; padding:25px; font-size:.9rem; border-top:1px solid #1f2c45; }
+    @media(max-width:760px) { header { position:static; } .site-search { order:3; flex-basis:100%; width:100%; } }
+    @media(max-width:540px) { main { margin:22px auto; padding:0 13px; } .card { padding:18px; } .search { display:block; } .search button { margin-top:10px; } }
+  </style>
+</head>
+<body>
+<header>
+  <a class="brand" href="{% url 'home' %}">📚 Academic Research Assistant</a>
+  {% if user.is_authenticated %}
+    <form class="site-search" method="get" action="{% url 'search_documents' %}" role="search">
+      <input type="search" name="q" maxlength="200" placeholder="Ask about your documents" aria-label="Ask about your documents">
+      <input type="hidden" name="mode" value="hybrid">
+      <button type="submit">Search</button>
+    </form>
+  {% endif %}
+  <nav>
+    {% if user.is_authenticated %}
+      <a href="{% url 'dashboard' %}">My Library</a>
+      <a href="{% url 'evaluation_dashboard' %}">Evaluation</a>
+      <a href="{% url 'profile' %}">Profile</a>
+      <form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button type="submit" class="secondary" style="padding:6px 10px">Log out</button></form>
+    {% else %}
+      <a href="{% url 'login' %}">Log in</a>
+      <a href="{% url 'register' %}">Register</a>
+    {% endif %}
+  </nav>
+</header>
+<main>
+  {% if messages %}<ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<footer>MCA Research Project · Evidence-based academic knowledge assistant</footer>
+</body>
+</html>

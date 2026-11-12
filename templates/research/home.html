@@ -1,0 +1,16 @@
+{% extends "research/base.html" %}
+{% block title %}Welcome | Academic Research Assistant{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted">YOUR PERSONAL ACADEMIC WORKSPACE</p>
+  <h1>Keep your research documents organised.</h1>
+  <p>Upload academic PDFs and text files, extract text with PDF page references, search your library, compare retrieval methods, and review source-linked evidence.</p>
+  <div class="row" style="margin-top:22px"><a class="button" href="{% url 'register' %}">Create free account</a><a class="button secondary" href="{% url 'login' %}">I already have an account</a></div>
+</section>
+<div class="grid">
+  <section class="card"><h2>01 · Secure accounts</h2><p>Register, sign in, and sign out using Django authentication.</p></section>
+  <section class="card"><h2>02 · Document library</h2><p>Upload and organise PDF and TXT academic files, with extracted text saved for each document.</p></section>
+  <section class="card"><h2>03 · Profile</h2><p>Save your institution, course, and a short biography.</p></section>
+  <section class="card"><h2>04 · Research evaluation</h2><p>Compare keyword, semantic, and hybrid retrieval using manually labeled questions.</p></section>
+</div>
+{% endblock %}

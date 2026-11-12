@@ -1,0 +1,14 @@
+{% extends "research/base.html" %}
+{% block title %}Upload document{% endblock %}
+{% block content %}
+<section class="card" style="max-width:720px;margin:auto">
+<h1>Upload an academic document</h1>
+<p class="muted">Accepted formats: PDF and TXT. Maximum file size: 10 MB. PDF text is extracted page by page after upload. Scanned PDFs may not contain selectable text.</p>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {% for field in form %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}
+  {% endfor %}
+  <div class="row" style="margin-top:20px"><button type="submit">Upload document</button><a class="button secondary" href="{% url 'dashboard' %}">Cancel</a></div>
+</form>
+</section>
+{% endblock %}

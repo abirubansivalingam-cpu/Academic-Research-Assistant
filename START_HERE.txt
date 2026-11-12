@@ -1,0 +1,22 @@
+ACADEMIC RESEARCH ASSISTANT — START HERE
+
+1. Extract this complete folder from the ZIP.
+2. Open the extracted folder in Windows File Explorer.
+3. Double-click setup_and_run.cmd.
+4. Wait for setup and migrations to finish.
+5. Open http://127.0.0.1:8000/ in your browser.
+6. Register a new user account.
+7. Upload a PDF or TXT file and test Search.
+
+For future launches, double-click run_project.cmd.
+
+To create an admin account:
+- Open CMD in this folder.
+- Activate: .venv\Scripts\activate.bat
+- Run: python manage.py createsuperuser
+
+Important:
+- Keyword search works with the core requirements.
+- Semantic/Hybrid search needs the optional requirements-semantic.txt install.
+- Do not delete db.sqlite3 or media if you need to preserve your own project data.
+- Read README.md for PostgreSQL setup, tests, and project limitations.

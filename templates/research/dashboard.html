@@ -1,0 +1,48 @@
+{% extends "research/base.html" %}
+{% block title %}My Library{% endblock %}
+{% block content %}
+<div class="row" style="justify-content:space-between">
+  <div><p class="muted">YOUR WORKSPACE</p><h1>My document library</h1><p class="muted">Hello, {{ user.username }}. Your documents are private to your account.</p></div>
+  <a class="button" href="{% url 'upload_document' %}">＋ Upload document</a>
+</div>
+<section class="card">
+  <div class="row" style="justify-content:space-between"><h2>Library overview</h2><strong>{{ total_documents }} document{{ total_documents|pluralize }}</strong></div>
+  <form method="get" class="search">
+    <div><label for="q">Filter your library</label><input id="q" name="q" value="{{ query }}" placeholder="Search title, description, filename"></div>
+    <button type="submit">Filter</button>
+    {% if query %}<a class="button secondary" href="{% url 'dashboard' %}">Clear</a>{% endif %}
+  </form>
+</section>
+<section class="card">
+  <h2>Uploaded documents</h2>
+  {% if documents %}
+  <div class="grid">
+    {% for document in documents %}
+    <article class="doc">
+      <h3>{{ document.title }}</h3>
+      <p class="muted">{{ document.filename }}</p>
+      {% if document.description %}<p>{{ document.description }}</p>{% endif %}
+      <p class="muted">Uploaded {{ document.uploaded_at|date:"d M Y, H:i" }} · {{ document.file_size|filesizeformat }}</p>
+      {% if document.extraction_status == "completed" %}
+        <p class="muted">{{ document.extracted_character_count }} extracted characters{% if document.page_count %} · {{ document.page_count }} pages{% endif %}</p>
+      {% elif document.extraction_status == "no_text" %}
+        <p class="muted">No selectable text found</p>
+      {% else %}
+        <p class="muted">Text extraction pending</p>
+      {% endif %}
+      <div class="row">
+        <a class="button secondary" href="{% url 'document_detail' document.pk %}">View extracted text</a>
+        <a class="button secondary" href="{% url 'open_document' document.pk %}" target="_blank" rel="noopener">Open file</a>
+        <form method="post" action="{% url 'delete_document' document.pk %}" onsubmit="return confirm('Delete this document permanently?');">
+          {% csrf_token %}<button class="danger" type="submit">Delete</button>
+        </form>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p>No documents found{% if query %} for “{{ query }}”{% endif %}. Upload a PDF or TXT file to get started.</p>
+    <a class="button" href="{% url 'upload_document' %}">Upload your first document</a>
+  {% endif %}
+</section>
+{% endblock %}

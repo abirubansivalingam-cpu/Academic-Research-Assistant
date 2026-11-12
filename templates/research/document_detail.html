@@ -1,0 +1,38 @@
+{% extends "research/base.html" %}
+{% block title %}{{ document.title }} | Extracted text{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted">DOCUMENT DETAILS</p>
+  <h1>{{ document.title }}</h1>
+  <p class="muted">{{ document.filename }} · {{ document.file_size|filesizeformat }}</p>
+  {% if document.description %}<p>{{ document.description }}</p>{% endif %}
+  <div class="row">
+    <a class="button secondary" href="{% url 'open_document' document.pk %}" target="_blank" rel="noopener">Open original file</a>
+    <a class="button secondary" href="{% url 'dashboard' %}">Back to library</a>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Extracted text</h2>
+  {% if document.extraction_status == "pending" %}
+    <p>This Phase 1 document has not been processed yet.</p>
+    <form method="post" action="{% url 'extract_document_text' document.pk %}">
+      {% csrf_token %}<button type="submit">Extract text</button>
+    </form>
+  {% elif document.extraction_status == "no_text" %}
+    <p>This document has no selectable text. Scanned image PDFs need OCR, which is not included yet.</p>
+  {% elif extracted_pages %}
+    {% for page in extracted_pages %}
+      <article id="page-{% if page.page_number %}{{ page.page_number }}{% else %}text{% endif %}" class="doc" style="margin-top:14px">
+        <h3>{% if page.page_number %}Page {{ page.page_number }}{% else %}Text file content{% endif %}</h3>
+        {% if page.text %}<pre class="extracted-text">{{ page.text }}</pre>{% else %}<p class="muted">No text on this page.</p>{% endif %}
+      </article>
+    {% endfor %}
+  {% else %}
+    <p class="muted">No extracted text is stored for this document.</p>
+  {% endif %}
+</section>
+<style>
+  .extracted-text { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; }
+</style>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "research/base.html" %}
+{% block title %}Search documents{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted">EVIDENCE SEARCH</p>
+  <h1>Search your documents</h1>
+  <p class="muted">Hybrid retrieval combines keyword matches with meaning-based similarity. The first semantic search may take longer while the local model is downloaded and creates document embeddings.</p>
+  <form method="get" action="{% url 'search_documents' %}" class="search">
+    <div>
+      <label for="id_q">Question or keywords</label>
+      {{ form.q }}
+      {{ form.q.errors }}
+    </div>
+    <div>
+      <label for="id_mode">Retrieval method</label>
+      {{ form.mode }}
+    </div>
+    <button type="submit">Search</button>
+  </form>
+  {{ form.non_field_errors }}
+</section>
+
+{% if query %}
+  <section class="card">
+    <h2>Results for “{{ query }}”</h2>
+    {% if results %}
+      <div class="evidence-answer">
+        <h2>Evidence-linked answer</h2>
+        <p class="muted">Extractive response from the highest-ranked source passages. Each quote is shown with its document and page citation.</p>
+        {% for result in answer_evidence %}
+          <blockquote>{{ result.excerpt }}</blockquote>
+          <p class="muted">— <a href="{% url 'document_detail' result.document.pk %}#page-{% if result.page.page_number %}{{ result.page.page_number }}{% else %}text{% endif %}">{{ result.document.title }}</a>, {% if result.page.page_number %}page {{ result.page.page_number }}{% else %}TXT document{% endif %}</p>
+        {% endfor %}
+      </div>
+      <p class="muted">Showing {{ results|length }} matching passage{{ results|length|pluralize }}.</p>
+      <div class="grid">
+        {% for result in results %}
+          <article class="doc">
+            <h3><a href="{% url 'document_detail' result.document.pk %}#page-{% if result.page.page_number %}{{ result.page.page_number }}{% else %}text{% endif %}">{{ result.document.title }}</a></h3>
+            <p class="muted">{% if result.page.page_number %}Page {{ result.page.page_number }}{% else %}TXT document{% endif %}{% if result.matched_terms %} · {{ result.match_count }} keyword match{{ result.match_count|pluralize }}{% else %} · Meaning-based match{% endif %}</p>
+            <p class="muted">{{ mode|title }} score: {{ result.score|floatformat:3 }}{% if mode != "keyword" %} · Semantic similarity: {{ result.semantic_score|floatformat:3 }}{% endif %}</p>
+            <p>{{ result.excerpt }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No matching extracted text was found.</p>
+      {% if pending_documents %}
+        <p class="muted">{{ pending_documents }} document{{ pending_documents|pluralize }} still need text extraction. Open a document from <a href="{% url 'dashboard' %}">your library</a> and choose “Extract text.”</p>
+      {% endif %}
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}

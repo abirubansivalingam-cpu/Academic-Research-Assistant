@@ -1,0 +1,85 @@
+{% extends "research/base.html" %}
+{% block title %}Evaluation | Academic Research Assistant{% endblock %}
+{% block content %}
+<section class="card">
+  <p class="muted">RESEARCH EVALUATION</p>
+  <h1>Retrieval evaluation</h1>
+  <p>Build a small labeled question set, then compare Keyword, Semantic, and Hybrid retrieval on the same questions. Each label identifies the source page or pages that contain relevant evidence.</p>
+  <p class="muted">{{ labeled_case_count }} labeled question{{ labeled_case_count|pluralize }} · {{ available_page_count }} available text page{{ available_page_count|pluralize }}</p>
+  {% if not available_page_count %}
+    <p>Upload and extract text from documents before labeling evaluation questions.</p>
+    <a class="button" href="{% url 'dashboard' %}">Open document library</a>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>1. Add a labeled question</h2>
+  <p class="muted">Use the same questions for every retrieval method. Select every page that a reviewer considers relevant.</p>
+  <form method="post" action="{% url 'evaluation_dashboard' %}">
+    {% csrf_token %}
+    <label for="{{ form.question.id_for_label }}">{{ form.question.label }}</label>
+    {{ form.question }}{{ form.question.errors }}
+    <label>{{ form.relevant_pages.label }}</label>
+    <p class="helptext">{{ form.relevant_pages.help_text }}</p>
+    {{ form.relevant_pages }}{{ form.relevant_pages.errors }}
+    <button type="submit">Save labeled question</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>2. Run the comparison</h2>
+  <p>Precision@k and Recall@k use the labeled relevant pages. Citation accuracy@3 measures how many of the three evidence passages link to a labeled relevant page. Aggregate scores are macro-averaged over questions. Response time excludes first-use model download and embedding-index creation.</p>
+  {% if labeled_case_count %}
+    <form method="post" action="{% url 'run_evaluation' %}" class="row">
+      {% csrf_token %}
+      <div>
+        <label for="{{ run_form.top_k.id_for_label }}">{{ run_form.top_k.label }}</label>
+        {{ run_form.top_k }}{{ run_form.top_k.errors }}
+      </div>
+      <button type="submit">Run all three methods</button>
+    </form>
+    {% if unlabeled_case_count %}
+      <p class="muted">{{ unlabeled_case_count }} unlabeled question(s) will be skipped.</p>
+    {% endif %}
+  {% else %}
+    <p class="muted">Save at least one question with a relevant page label to run the comparison.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Labeled dataset</h2>
+  {% if cases %}
+    <div class="grid">
+      {% for case in cases %}
+        <article class="doc">
+          <h3>{{ case.question }}</h3>
+          <p class="muted">{{ case.relevant_pages.all|length }} labeled source page{{ case.relevant_pages.all|length|pluralize }}</p>
+          <ul>
+            {% for page in case.relevant_pages.all %}
+              <li>{{ page.document.title }} — {% if page.page_number %}page {{ page.page_number }}{% else %}TXT document{% endif %}</li>
+            {% endfor %}
+          </ul>
+          <form method="post" action="{% url 'delete_evaluation_case' case.pk %}">
+            {% csrf_token %}<button type="submit" class="danger">Remove question</button>
+          </form>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="muted">No evaluation questions have been labeled yet.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Previous comparison reports</h2>
+  {% if runs %}
+    <ul>
+      {% for run in runs %}
+        <li><a href="{% url 'evaluation_run_detail' run.pk %}">Run from {{ run.created_at|date:"d M Y, H:i" }}</a> — {{ run.question_count }} question{{ run.question_count|pluralize }}, k={{ run.top_k }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted">Run a comparison to save the first report.</p>
+  {% endif %}
+</section>
+{% endblock %}
